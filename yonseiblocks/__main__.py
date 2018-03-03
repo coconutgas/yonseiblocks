@@ -210,6 +210,68 @@ class Blockchain(object):
         return proof
 
 
+class Transaction(object):
+    def __init__(self):
+        self.version = 1
+        self.tx_in = []
+        self.tx_out = []
+        self.lock_time = []
+
+
+    def add_input(self,input):
+        if Transaction.is_valid_input(input):
+            self.tx_in.append(input)
+            return 1
+        else:
+            print("Wrong input")
+            return 0
+
+    def del_input(self,index = None):
+        if len(self.tx_in):
+            return self.tx_in.pop(index)
+        else:
+            return 0
+
+
+    def add_output(self,output):
+        if Transaction.is_valid_output(output):
+            self.tx_in.append(output)
+            return 1
+        else:
+            print("Wrong output")
+            return 0
+
+    def del_output(self,index = None):
+        if len(self.tx_out):
+            return self.tx_out.pop(index)
+        else:
+            return 0
+
+
+
+
+    def delt
+
+
+
+class TxIn(object):
+    def __init__(self):
+        self.previous_output=[]
+        self.sig_script=Script();
+        self
+
+
+class tx_out(object):
+    def __init__(self):
+        self.version = 1
+        self.tx_in = tx_in()
+        self.tx_out = tx_out()
+        self.lock_time = []
+
+        return 1
+
+
+
 # Instantiate Node
 app = Flask(__name__)
 
