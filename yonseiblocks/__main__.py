@@ -210,6 +210,9 @@ class Blockchain(object):
         return proof
 
 
+
+
+
 class Transaction(object):
     def __init__(self):
         self.version = 1
@@ -217,11 +220,31 @@ class Transaction(object):
         self.tx_out = []
         self.lock_time = []
 
+    ...
+    input
 
-    def add_input(self,input):
+    def add_input(self,TXID,vout,sig_script):
+        prev_out=Blockchain.GetTxOut(TXID,vout)
+
+        if prev_out==False:
+            print("The output does not exist")
+            return False
+
+        if Transaction.script(prev_out.pub_script,sig_script)==False
+            print("Wrong signature script")
+            return False
+
+        self.tx_in.append({
+            'TXID' : TXID,
+            'vout' : vout,
+            'sig_script' : sig_script
+        })
+
+
+
         if Transaction.is_valid_input(input):
             self.tx_in.append(input)
-            return 1
+            return True
         else:
             print("Wrong input")
             return 0
@@ -246,6 +269,9 @@ class Transaction(object):
             return self.tx_out.pop(index)
         else:
             return 0
+
+    @staticmethod
+    def is_valid_input(input):
 
 
 
