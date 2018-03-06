@@ -212,7 +212,7 @@ class Blockchain(object):
                         sig_type=sig[-1] # Last character indicates type of signature
                         sig_ECDSA=sig[:-1]
 
-                        if sig_type==1 # 1:SIGHASH_ALL
+                        if sig_type==1 # 1:SIGHASH_ALLd
 
 
                 except IndexError as e:
