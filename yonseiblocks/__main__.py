@@ -4,6 +4,8 @@ from argparse import ArgumentParser
 from time import time
 from urllib.parse import urlparse
 from uuid import uuid4
+from ecdsa import SigningKey
+from ecdsa import VerifyingKey
 
 import requests
 from flask import Flask, jsonify, request
