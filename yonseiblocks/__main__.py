@@ -175,6 +175,66 @@ class Blockchain(object):
         self.chain.append(block)
         return block
 
+    def get_txout(self,TXID, vout):
+        return False
+
+    @staticmethod
+    def run_script(*args):
+        stack = []
+
+        for script in args:
+            key_script=script.split()
+
+            while key_script:
+                opcode=key_script.pop()
+
+                try:
+                    if opcode=="OP_DUP":
+                        stack.append(stack[-1])
+
+                    elif opcode=="OP_HASH160":
+                        sha256=hashlib.sha256(stack.pop().encode()).digest()
+                        ripemd160=hashlib.new('ripemd160')
+                        ripemd160.update(sha256)
+
+                        stack.append(ripemd160.hexdigest())
+
+                    elif opcode=="OP_EQUALVERIFY":
+                        fEqual=stack.pop()==stack.pop()
+                        if fEqual==False
+                            return False
+
+                    elif opcode=="CHECKSIG":
+                        pubkey=stack.pop()
+                        sig=stack.pop()
+                        sig_type=sig[-1] # Last character indicates type of signature
+                        sig_ECDSA=sig[:-1]
+
+                        if sig_type==1 # 1:SIGHASH_ALL
+
+
+                except IndexError as e:
+                    print("Stack is empty")
+
+
+        return False
+
+
+
+
+
+
+    def is_valid_transcation(self, TX):
+        for input in TX.tx_in:
+            prev_out=self.get_txout(input.TXID,input.vout)
+
+            if prev_out==False:
+                print("Previous output does exist")
+                return False
+
+            if
+
+
     def create_new_transaction(self, sender, receiver, amount):
         """
         Create a new Transaction to be added in the next Block
@@ -213,7 +273,7 @@ class Blockchain(object):
 
 
 
-class Transaction(object):
+class transaction(object):
     def __init__(self):
         self.version = 1
         self.tx_in = []
