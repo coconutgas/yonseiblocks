@@ -1,9 +1,11 @@
 import hashlib
 import json
+import pickle
 from argparse import ArgumentParser
 from time import time
 from urllib.parse import urlparse
 from uuid import uuid4
+import ecdsa
 from ecdsa import SigningKey
 from ecdsa import VerifyingKey
 
@@ -35,7 +37,6 @@ class Blockchain(object):
     def calculate_hash(block):
         """
         Calculate SHA-256 hash of a Block
-
         :param block: <dict> Block to calculate hash for
         :return: <str> hash value
         """
@@ -48,7 +49,6 @@ class Blockchain(object):
     def is_valid_proof(prev_proof, proof):
         """
         Validate the proof
-
         :param prev_proof: <int> previous Proof
         :param proof: <current Proof
         :return: <bool>
@@ -61,7 +61,6 @@ class Blockchain(object):
     def is_valid_chain(self, chain):
         """
         Validate a chain
-
         :param chain: <list> a chain
         :return: <bool>
         """
@@ -90,7 +89,6 @@ class Blockchain(object):
     def register_node(self, address):
         """
         Add a new Node to the list
-
         :param address: <str> address of Node (eg. 'http://192.168.0.1:5000')
         :return: None
         """
@@ -102,7 +100,6 @@ class Blockchain(object):
     def deregister_node(self, address):
         """
         Remove a Node from the list
-
         :param address: <str> address of Node (eg. 'http://192.168.0.1:5000')
         :return: None
         """
@@ -114,7 +111,6 @@ class Blockchain(object):
     def deregister_all_nodes(self):
         """
         Remove all Nodes from the list
-
         :return: None
         """
 
@@ -125,8 +121,6 @@ class Blockchain(object):
         """
         Perform the Consensus algorithm
         If there is a conflict, replace current Chain with the longest Chain in the network
-
-
         :return: <bool> True if chain was replaced
         """
 
@@ -155,7 +149,6 @@ class Blockchain(object):
     def create_new_block(self, proof, prev_hash):
         """
         Create a new Block in the Chain
-
         :param proof: <int> Proof found using the Proof of Work algorithm
         :param prev_hash: <str> hash of previous Block
         :return: <dict> new Block
@@ -178,10 +171,22 @@ class Blockchain(object):
         return block
 
     def get_txout(self,TXID, vout):
+        for block in self.chain:
+            if TXID in block['transcations']:
+                if vout in block['transcations'][TXID]['tx_out']:
+                    for block in self.chain:
+                        for TX in block['transaction']:
+                            for input in TX['tx_in']:
+                                if input['TXID']==TXID and input['vout']==vout:
+                                #print("Tx out was already used")
+                                return False
+
+                    return block['transcations'][TXID]['tx_out'][vout]
+        #print("Tx out dose not exist")
         return False
 
     @staticmethod
-    def run_script(*args):
+    def interpreter(TX, *args):
         stack = []
 
         for script in args:
@@ -209,11 +214,21 @@ class Blockchain(object):
                     elif opcode=="CHECKSIG":
                         pubkey=stack.pop()
                         sig=stack.pop()
-                        sig_type=sig[-1] # Last character indicates type of signature
+                        sig_type=int(sig[-1]) # Last character indicates type of signature
                         sig_ECDSA=sig[:-1]
 
-                        if sig_type==1 # 1:SIGHASH_ALLda
+                        if sig_type==1 # 1:SIGHASH_ALL
+                            TX_1=TX
+                            for input in TX_1.tx_in:
+                                input['sig_script'] = []
+                            TX_s=pickle.dumps(TX_1)
+                            TX_hash=hashlib.sha256(hashlib.sha256(TX_s).digest()).digest()
+                            vk=VerifyingKey.from_string(pubkey, curve=ecdsa.SECP256k1)
+                            fChecksig=vk.verify(sig_ECDSA,TX_hash)
+                            return fChecksig
 
+                    else:
+                        stack.append(opcode) # In this case, opcode is not operator and is value
 
                 except IndexError as e:
                     print("Stack is empty")
@@ -227,31 +242,45 @@ class Blockchain(object):
 
 
     def is_valid_transcation(self, TX):
-        for input in TX.tx_in:
-            prev_out=self.get_txout(input.TXID,input.vout)
+        fee=0
+
+        for input in TX['tx_in']:
+            prev_out=self.get_txout(input['TXID'],input['vout'])
 
             if prev_out==False:
-                print("Previous output does exist")
+                print("invaild tx_in")
                 return False
 
-            if
+            if interpreter(TX,input['sig_script'],prev_out['pk_script'])==False:
+                print("invaild signature")
+                return False
+
+            fee=fee+prev_out['value']
+
+        for output in TX['tx_out']:
+            fee=fee-output['value']
+
+        if fee<0:
+            print("Balance is negative")
+            return False
+
+        return fee
 
 
-    def create_new_transaction(self, sender, receiver, amount):
+
+    def create_new_transaction(self, TX):
         """
         Create a new Transaction to be added in the next Block
-
         :param sender: <str> uuid of sender
         :param receiver: <str> uuid of receiver
         :param amount: <int> amount of coins
         :return: <int> index of the Block that will hold this Transaction
         """
 
-        self.utxo.append({
-            'sender': sender,
-            'receiver': receiver,
-            'amount': amount,
-        })
+        if is_valid_transcation(TX)==False
+                return False
+
+        self.currunt_transaction['TXID']={'TX':TX, 'fee':fee}
 
         return self.latest_block['index']+1
 
@@ -260,7 +289,6 @@ class Blockchain(object):
         Perform the Proof of Work algorithm
             - Find a number p' such that hash(pp') contains 4 leading zeroes
             - p is the previous Proof, p' is the current Proof
-
         :param prev_proof: <int>
         :return: <int>
         """
